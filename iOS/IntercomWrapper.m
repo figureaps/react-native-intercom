@@ -15,7 +15,7 @@ RCT_EXPORT_MODULE();
 
 // Available as NativeModules.IntercomWrapper.registerIdentifiedUser
 RCT_EXPORT_METHOD(registerIdentifiedUser:(NSDictionary*)options callback:(RCTResponseSenderBlock)callback) {
-    NSLog(@"registerIdentifiedUser with %@", options);
+    NSLog(@"registerIdentifiedUser");
 
     NSString* userId      = options[@"userId"];
     NSString* userEmail   = options[@"email"];
@@ -59,7 +59,7 @@ RCT_EXPORT_METHOD(reset:(RCTResponseSenderBlock)callback) {
 
 // Available as NativeModules.IntercomWrapper.updateUser
 RCT_EXPORT_METHOD(updateUser:(NSDictionary*)options callback:(RCTResponseSenderBlock)callback) {
-    NSLog(@"updateUser with %@", options);
+    NSLog(@"updateUser");
     NSDictionary* attributes = options;
     [Intercom updateUserWithAttributes:attributes];
     callback(@[[NSNull null]]);
@@ -67,7 +67,7 @@ RCT_EXPORT_METHOD(updateUser:(NSDictionary*)options callback:(RCTResponseSenderB
 
 // Available as NativeModules.IntercomWrapper.logEvent
 RCT_EXPORT_METHOD(logEvent:(NSString*)eventName metaData:(NSDictionary*)metaData callback:(RCTResponseSenderBlock)callback) {
-    NSLog(@"logEvent with %@", eventName);
+    NSLog(@"logEvent");
 
     if (metaData.count > 0) {
         [Intercom logEventWithName:eventName metaData:metaData];
@@ -176,7 +176,7 @@ RCT_EXPORT_METHOD(setInAppMessageVisibility:(NSString*)visibilityString callback
 
 // Available as NativeModules.IntercomWrapper.setupAPN
 RCT_EXPORT_METHOD(setupAPN:(NSString*)deviceToken callback:(RCTResponseSenderBlock)callback) {
-    NSLog(@"setupAPN with %@", deviceToken);
+    NSLog(@"setupAPN");
     [Intercom setDeviceToken:[deviceToken dataUsingEncoding:NSUTF8StringEncoding]];
     callback(@[[NSNull null]]);
 };
