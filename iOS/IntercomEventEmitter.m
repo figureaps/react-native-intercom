@@ -14,8 +14,14 @@
 RCT_EXPORT_MODULE();
 
 - (void)handleUpdateUnreadCount:(NSNotification *)notification {
-    
-    [self sendEventWithName:IntercomUnreadConversationCountDidChangeNotification body:@{@"count": [NSNumber numberWithUnsignedInteger: [Intercom unreadConversationCount]]}];
+    __weak IntercomEventEmitter *weakSelf = self;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        IntercomEventEmitter *strongSelf = weakSelf;
+        NSUInteger unreadCount = [Intercom unreadConversationCount];
+        NSNumber *unreadCountNumber = [NSNumber numberWithUnsignedInteger: unreadCount];
+        NSDictionary *body = @{@"count": unreadCountNumber};
+        [strongSelf sendEventWithName:IntercomUnreadConversationCountDidChangeNotification body:body];
+    });
 }
 
 - (NSDictionary<NSString *, NSString *> *)constantsToExport {

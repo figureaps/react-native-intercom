@@ -7,6 +7,7 @@
 //
 
 #import "IntercomWrapper.h"
+#import "IntercomUserAttributesBuilder.h"
 #import <Intercom/Intercom.h>
 
 @implementation IntercomWrapper
@@ -39,6 +40,18 @@ RCT_EXPORT_METHOD(registerIdentifiedUser:(NSDictionary*)options callback:(RCTRes
     }
 };
 
+// Available as NativeModules.IntercomWrapper.sendTokenToIntercom
+RCT_EXPORT_METHOD(sendTokenToIntercom:(NSString*)token callback:(RCTResponseSenderBlock)callback) {
+    NSLog(@"sendTokenToIntercom");
+
+    // This is a stub. The iOS Intercom client sends the deviceToken instead of FCM token in:
+    // - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
+    //    [Intercom setDeviceToken:deviceToken];
+    // }
+
+    callback(@[[NSNull null]]);
+}
+
 // Available as NativeModules.IntercomWrapper.registerUnidentifiedUser
 RCT_EXPORT_METHOD(registerUnidentifiedUser:(RCTResponseSenderBlock)callback) {
     NSLog(@"registerUnidentifiedUser");
@@ -51,7 +64,7 @@ RCT_EXPORT_METHOD(reset:(RCTResponseSenderBlock)callback) {
     NSLog(@"reset");
 
     dispatch_async(dispatch_get_main_queue(), ^{
-        [Intercom reset];
+        [Intercom logout];
     });
 
     callback(@[[NSNull null]]);
@@ -61,7 +74,7 @@ RCT_EXPORT_METHOD(reset:(RCTResponseSenderBlock)callback) {
 RCT_EXPORT_METHOD(updateUser:(NSDictionary*)options callback:(RCTResponseSenderBlock)callback) {
     NSLog(@"updateUser");
     NSDictionary* attributes = options;
-    [Intercom updateUserWithAttributes:attributes];
+    [Intercom updateUser:[IntercomUserAttributesBuilder userAttributesFromDictionary:attributes]];
     callback(@[[NSNull null]]);
 };
 
@@ -185,29 +198,23 @@ RCT_EXPORT_METHOD(setupAPN:(NSString*)deviceToken callback:(RCTResponseSenderBlo
 RCT_EXPORT_METHOD(registerForPush:(RCTResponseSenderBlock)callback) {
     NSLog(@"registerForPush");
 
-    UIApplication *application = [UIApplication sharedApplication];
-    if ([application respondsToSelector:@selector(registerUserNotificationSettings:)]){ // iOS 8 (User notifications)
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIApplication *application = [UIApplication sharedApplication];
         [application registerUserNotificationSettings:
-         [UIUserNotificationSettings settingsForTypes:
-          (UIUserNotificationTypeBadge |
-           UIUserNotificationTypeSound |
-           UIUserNotificationTypeAlert)
-                                           categories:nil]];
+        [UIUserNotificationSettings settingsForTypes:
+        (UIUserNotificationTypeBadge |
+        UIUserNotificationTypeSound |
+        UIUserNotificationTypeAlert)
+                                        categories:nil]];
         [application registerForRemoteNotifications];
-    } else { // iOS 7 (Remote notifications)
-        [application registerForRemoteNotificationTypes:
-         (UIRemoteNotificationType)
-         (UIRemoteNotificationTypeBadge |
-          UIRemoteNotificationTypeSound |
-          UIRemoteNotificationTypeAlert)];
-    }
+    });
 
     callback(@[[NSNull null]]);
 };
 
-// Available as NativeModules.IntercomWrapper.setHMAC
-RCT_EXPORT_METHOD(setHMAC:(NSString*)hmac data:(NSString*)data callback:(RCTResponseSenderBlock)callback) {
-    [Intercom setHMAC:hmac data:data];
+// Available as NativeModules.IntercomWrapper.setUserHash
+RCT_EXPORT_METHOD(setUserHash:(NSString*)userHash callback:(RCTResponseSenderBlock)callback) {
+    [Intercom setUserHash:userHash];
     callback(@[[NSNull null]]);
 };
 

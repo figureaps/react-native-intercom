@@ -6,11 +6,8 @@ React Native wrapper for Intercom.io. Based off of [intercom-cordova](https://gi
 
 ### IOS
 
-1. `npm install react-native-intercom`
-
-#### RNPM
-
-Run `rnpm link`
+Run `npm install react-native-intercom`
+Run `react-native link`
 
 #### CocoaPods
 
@@ -24,8 +21,7 @@ Follow how to manually link a library here [https://facebook.github.io/react-nat
 
 ### Android
 
-Run `rnpm link`
-
+Run `npm install react-native-intercom`
 
 
 ## Necessary Code Bits
@@ -54,10 +50,70 @@ Initialize Intercom in your `AppDelegate.m`
 
 More instructions here: [Intercom for Android](https://github.com/intercom/intercom-android)
 
-```
-Intercom.initialize(getApplicationContext(), "your api key", "your app id");
+Your Android Application should look like:
+
+```java
+// ...
+import com.robinpowered.react.Intercom.IntercomPackage;
+import io.intercom.android.sdk.Intercom;
+
+public class MainApplication extends Application {
+
+  @Override
+  public void onCreate() {
+    super.onCreate();
+    Intercom.initialize(this, "your api key", "your app id");
+    // ...
+  }
+  
+  public List<ReactPackage> getPackages() {
+    return Arrays.<ReactPackage>asList(
+        // ...
+        new IntercomPackage()
+	// ...
+    );
+  }
+}
+
 ```
 
+And in your *AndroidManifest.xml* should look like
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest package="com.myapp"
+	  ...
+	  ... add the tools namespace if not already present...
+          xmlns:tools="http://schemas.android.com/tools"
+          ...
+    >
+
+  <application 
+	       ...
+	       >
+
+    ...
+    ...
+    ...
+
+    <!-- Add these lines -->
+    <service
+        android:name="com.robinpowered.react.Intercom.IntercomIntentService"
+        android:exported="false">
+      <intent-filter
+          android:priority="999">
+        <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
+      </intent-filter>
+    </service>
+    <receiver
+        android:name="io.intercom.android.sdk.push.IntercomPushBroadcastReceiver"
+        tools:replace="android:exported"
+        android:exported="true" />
+	
+  </application>
+</manifest>
+```
+
+Don't forget the *tools* namespace `xmlns:tools="http://schemas.android.com/tools"` in your main `<application>` tag
 
 Usage
 =====
@@ -76,20 +132,36 @@ Intercom.logEvent('viewed_screen', { extra: 'metadata' });
 Intercom.registerIdentifiedUser({ userId: 'bob' });
 ```
 
+### Register Unidentified user
+```javascript
+Intercom.registerUnidentifiedUser();
+```
+
 ### Register a Logged In user and post extra metadata
 ```javascript
 Intercom.registerIdentifiedUser({ userId: 'bob' })
-.then(() => {
-	console.log('registerIdentifiedUser done');
-
-	return Intercom.updateUser({
-		email: 'email',
-		name: 'name',
-	});
-})
-.catch((err) => {
-	console.log('registerIdentifiedUser ERROR', err);
+Intercom.updateUser({
+    // Pre-defined user attributes
+    email: 'mimi@intercom.com',
+    user_id: 'user_id',
+    name: 'your name',
+    phone: '010-1234-5678',
+    language_override: 'language_override',
+    signed_up_at: 1004,
+    unsubscribed_from_emails: true,
+    companies: [{
+        // Only supported for iOS now
+        // Parameters: IntercomUserAttribtesBuilder.m -> companyForDictionary()
+    }],
+    custom_attributes: {
+        my_custom_attribute: 123
+    },
 });
+```
+
+### Set User Hash for Identity Validation (optional)
+```javascript
+Intercom.setUserHash(hash_received_from_backend)
 ```
 
 ### Sign Out
@@ -126,4 +198,15 @@ _onUnreadChange = ({ count }) => {
 	//...
 }
 
+
+```
+
+### Send FCM token directly to Intercom
+
+```
+Firebase.messaging().getToken()
+  .then((token) => {
+    console.log('Device FCM Token: ', token);
+    Intercom.sendTokenToIntercom(token);
+});
 ```
